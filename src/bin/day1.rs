@@ -1,7 +1,7 @@
+use std::collections::HashSet;
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::collections::HashSet;
 use std::iter;
 
 pub fn main() {

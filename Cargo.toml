@@ -1,0 +1,4 @@
+[package]
+name = "aoc-2018"
+version = "0.1.0"
+authors = ["Simon Siegler <simon.siegler@gmail.com>"]
