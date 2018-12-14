@@ -7,13 +7,10 @@ use aoc_2018::file_lines;
 
 fn main() {
     let sites = file_lines().map(|s| s.parse::<Point>().unwrap()).collect();
+    let area = Area::from(&sites);
 
-    println!("Largest finite area: {}", find_largest_finite_area(&sites));
-}
-
-fn find_largest_finite_area(sites: &Vec<Point>) -> u32 {
-    let area = Area::from(sites);
-    *area.measure_finite_areas().values().max().unwrap()
+    println!("Largest finite area: {}", area.measure_finite_areas().values().max().unwrap());
+    println!("Total region: {}", area.total_distances().filter(|&d| d < 10000).count());
 }
 
 struct Area<'a> {
@@ -38,6 +35,22 @@ impl<'a> Area<'a> {
             max_y = max_y.max(site.y);
         }
         Self { min_x, max_x, min_y, max_y, sites }
+    }
+
+    fn total_distances(&'a self) -> impl Iterator<Item=u32> + 'a {
+        self.points().map(move |point| self.compute_total_distance(&point))
+    }
+
+    fn compute_total_distance(&self, point: &Point) -> u32 {
+        self.sites.iter()
+            .map(|site| site.manhattan_distance(point))
+            .sum()
+    }
+
+    fn points(&'a self) -> impl Iterator<Item=Point> + 'a{
+        (self.min_x..=self.max_x)
+            .flat_map(move |x| (self.min_y..=self.max_y)
+                .map(move |y| Point { x, y }))
     }
 
     fn measure_inside(&self) -> HashMap<&Point, u32> {
