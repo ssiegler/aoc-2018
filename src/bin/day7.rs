@@ -6,22 +6,21 @@ use std::cmp::Ordering;
 use aoc_2018::file_lines;
 
 fn main() {
-
     println!("Steps: {}", order_tasks(file_lines()));
 }
 
 fn order_tasks (requirements: impl Iterator<Item=String>) -> String {
     let mut tasks = Dependencies::new();
     for requirement in requirements {
-        let required = requirement.chars().nth(5).unwrap();
-        let dependant = requirement.chars().nth(36).unwrap();
+        let required = Task(requirement.chars().nth(5).unwrap());
+        let dependant = Task(requirement.chars().nth(36).unwrap());
         tasks.add(required, dependant)
     }
     let order = tasks.resolve();
     order
 }
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 struct Task(char);
 
 impl Ord for Task {
@@ -38,7 +37,7 @@ impl PartialOrd for Task {
 
 #[derive(Debug)]
 struct Dependencies {
-    depending: HashMap<char, Vec<char>>
+    depending: HashMap<Task, Vec<Task>>
 }
 
 impl Dependencies {
@@ -48,13 +47,13 @@ impl Dependencies {
         }
     }
 
-    fn add(&mut self, required: char, depending: char) {
+    fn add(&mut self, required: Task, depending: Task) {
         self.depending.entry(depending).or_insert_with(|| vec![]);
         self.depending.entry(required).or_insert_with(|| vec![]).push(depending);
     }
 
-    fn count_required(&self) -> HashMap<char, usize> {
-        let mut counts: HashMap<char, usize> = HashMap::new();
+    fn count_required(&self) -> HashMap<Task, usize> {
+        let mut counts: HashMap<Task, usize> = HashMap::new();
         for (&required, depending) in &self.depending {
             counts.entry(required).or_insert(0);
             for &task in depending {
@@ -70,14 +69,14 @@ impl Dependencies {
         let mut queue = BinaryHeap::new();
         required_count.iter()
             .filter(|(_task, count)| **count == 0)
-            .for_each(|(&task, _count)| queue.push(Task(task)));
-        while let Some(Task(task)) = queue.pop() {
-            result.push(task);
+            .for_each(|(&task, _count)| queue.push(task));
+        while let Some(task) = queue.pop() {
+            result.push(task.0);
             for depending in self.depending.get(&task).unwrap() {
-                let count = required_count.get_mut(depending).unwrap();
+                let count = required_count.get_mut(&depending).unwrap();
                 *count -= 1;
                 if *count == 0 {
-                    queue.push(Task(*depending));
+                    queue.push(*depending);
                 }
             }
         }
