@@ -6,14 +6,19 @@ use std::cmp::Ordering;
 use aoc_2018::file_lines;
 
 fn main() {
+
+    println!("Steps: {}", order_tasks(file_lines()));
+}
+
+fn order_tasks (requirements: impl Iterator<Item=String>) -> String {
     let mut tasks = Dependencies::new();
-    for line in file_lines() {
-        let required = line.chars().nth(5).unwrap();
-        let dependant = line.chars().nth(36).unwrap();
+    for requirement in requirements {
+        let required = requirement.chars().nth(5).unwrap();
+        let dependant = requirement.chars().nth(36).unwrap();
         tasks.add(required, dependant)
     }
-
-    println!("Steps: {}", tasks.resolve());
+    let order = tasks.resolve();
+    order
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -77,5 +82,28 @@ impl Dependencies {
             }
         }
         result
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use aoc_2018::file_lines_from;
+
+    #[test]
+    fn example_part1() {
+        assert_eq!(order_tasks("Step C must be finished before step A can begin.
+Step C must be finished before step F can begin.
+Step A must be finished before step B can begin.
+Step A must be finished before step D can begin.
+Step B must be finished before step E can begin.
+Step D must be finished before step E can begin.
+Step F must be finished before step E can begin.".lines().map(String::from)), "CABDFE");
+    }
+
+    #[test]
+    fn part1() {
+        assert_eq!(order_tasks(file_lines_from("day7-input.txt")), "BGJCNLQUYIFMOEZTADKSPVXRHW");
     }
 }
