@@ -19,14 +19,10 @@ fn parse_dependencies(input: impl Iterator<Item = String>) -> impl Iterator<Item
     input.map(|line| line.parse().unwrap())
 }
 
-fn order_task_dependencies(requirements: impl Iterator<Item = Dependency>) -> String {
+fn order_task_dependencies(dependencies: impl Iterator<Item = Dependency>) -> String {
     let mut tasks = Dependencies::new();
-    for Dependency {
-        depending,
-        required,
-    } in requirements
-    {
-        tasks.add(required, depending)
+    for dependency in dependencies {
+        tasks.add(dependency)
     }
     let order = tasks.resolve();
     order
@@ -84,7 +80,13 @@ impl Dependencies {
         }
     }
 
-    fn add(&mut self, required: Task, depending: Task) {
+    fn add(
+        &mut self,
+        Dependency {
+            depending,
+            required,
+        }: Dependency,
+    ) {
         self.depending.entry(depending).or_insert_with(|| vec![]);
         self.depending
             .entry(required)
@@ -110,14 +112,16 @@ impl Dependencies {
         required_count
             .iter()
             .filter(|(_task, count)| **count == 0)
-            .for_each(|(&task, _count)| queue.push(task));
+            .for_each(|(&task, _required)| queue.push(task));
         while let Some(task) = queue.pop() {
             result.push(task.0);
-            for depending in self.depending.get(&task).unwrap() {
-                let count = required_count.get_mut(&depending).unwrap();
-                *count -= 1;
-                if *count == 0 {
-                    queue.push(*depending);
+            if let Some(depending) = self.depending.get(&task) {
+                for task in depending {
+                    let count = required_count.get_mut(&task).unwrap();
+                    *count -= 1;
+                    if *count == 0 {
+                        queue.push(*task);
+                    }
                 }
             }
         }
@@ -175,31 +179,31 @@ Step F must be finished before step E can begin."
             vec![
                 Dependency {
                     required: Task('C'),
-                    depending: Task('A')
+                    depending: Task('A'),
                 },
                 Dependency {
                     required: Task('C'),
-                    depending: Task('F')
+                    depending: Task('F'),
                 },
                 Dependency {
                     required: Task('A'),
-                    depending: Task('B')
+                    depending: Task('B'),
                 },
                 Dependency {
                     required: Task('A'),
-                    depending: Task('D')
+                    depending: Task('D'),
                 },
                 Dependency {
                     required: Task('B'),
-                    depending: Task('E')
+                    depending: Task('E'),
                 },
                 Dependency {
                     required: Task('D'),
-                    depending: Task('E')
+                    depending: Task('E'),
                 },
                 Dependency {
                     required: Task('F'),
-                    depending: Task('E')
+                    depending: Task('E'),
                 },
             ]
         )
