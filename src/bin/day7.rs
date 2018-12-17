@@ -7,24 +7,24 @@ use std::str::FromStr;
 use aoc_2018::file_lines;
 
 fn main() {
-    println!("Steps: {}", order_tasks(file_lines()));
+    let dependencies = parse_dependencies(file_lines());
+    println!("Steps: {}", order_tasks(dependencies));
 }
 
-fn order_tasks(input_lines: impl Iterator<Item = String>) -> String {
-    order_task_dependencies(parse_dependencies(input_lines))
+fn parse_dependencies<I>(input: I) -> Vec<Dependency>
+where
+    I: Iterator,
+    I::Item: AsRef<str>,
+{
+    input.map(|line| line.as_ref().parse().unwrap()).collect()
 }
 
-fn parse_dependencies(input: impl Iterator<Item = String>) -> impl Iterator<Item = Dependency> {
-    input.map(|line| line.parse().unwrap())
-}
-
-fn order_task_dependencies(dependencies: impl Iterator<Item = Dependency>) -> String {
+fn order_tasks(dependencies: Vec<Dependency>) -> String {
     let mut tasks = Dependencies::new();
     for dependency in dependencies {
         tasks.add(dependency)
     }
-    let order = tasks.resolve();
-    order
+    tasks.resolve()
 }
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
@@ -56,11 +56,6 @@ impl FromStr for Dependency {
 }
 
 #[derive(Debug)]
-struct Dependencies {
-    tasks: HashMap<TaskId, Task>,
-}
-
-#[derive(Debug)]
 struct Task {
     depending: HashSet<TaskId>,
     required: HashSet<TaskId>,
@@ -89,6 +84,11 @@ impl Task {
     fn is_available(&self) -> bool {
         self.required.is_empty()
     }
+}
+
+#[derive(Debug)]
+struct Dependencies {
+    tasks: HashMap<TaskId, Task>,
 }
 
 impl Dependencies {
@@ -151,76 +151,76 @@ mod tests {
 
     #[test]
     fn example_part1() {
-        assert_eq!(
-            order_tasks(
-                "Step C must be finished before step A can begin.
+        let dependencies = parse_dependencies(
+            "Step C must be finished before step A can begin.
 Step C must be finished before step F can begin.
 Step A must be finished before step B can begin.
 Step A must be finished before step D can begin.
 Step B must be finished before step E can begin.
 Step D must be finished before step E can begin.
 Step F must be finished before step E can begin."
-                    .lines()
-                    .map(String::from)
-            ),
-            "CABDFE"
+                .lines(),
         );
+        assert_eq!(order_tasks(dependencies), "CABDFE");
     }
 
     #[test]
     fn part1() {
-        assert_eq!(
-            order_tasks(file_lines_from("day7-input.txt")),
-            "BGJCNLQUYIFMOEZTADKSPVXRHW"
-        );
+        let dependencies = parse_dependencies(file_lines_from("day7-input.txt"));
+        assert_eq!(order_tasks(dependencies), "BGJCNLQUYIFMOEZTADKSPVXRHW");
     }
 
     #[test]
-    fn dependencies_from_str() {
-        let dependencies: Vec<Dependency> = "Step C must be finished before step A can begin.
-Step C must be finished before step F can begin.
-Step A must be finished before step B can begin.
-Step A must be finished before step D can begin.
-Step B must be finished before step E can begin.
-Step D must be finished before step E can begin.
-Step F must be finished before step E can begin."
-            .lines()
-            .map(Dependency::from_str)
-            .filter_map(Result::ok)
-            .collect();
+    fn dependency_from_str() {
         assert_eq!(
-            dependencies,
-            vec![
-                Dependency {
-                    required: TaskId('C'),
-                    depending: TaskId('A'),
-                },
-                Dependency {
-                    required: TaskId('C'),
-                    depending: TaskId('F'),
-                },
-                Dependency {
-                    required: TaskId('A'),
-                    depending: TaskId('B'),
-                },
-                Dependency {
-                    required: TaskId('A'),
-                    depending: TaskId('D'),
-                },
-                Dependency {
-                    required: TaskId('B'),
-                    depending: TaskId('E'),
-                },
-                Dependency {
-                    required: TaskId('D'),
-                    depending: TaskId('E'),
-                },
-                Dependency {
-                    required: TaskId('F'),
-                    depending: TaskId('E'),
-                },
-            ]
-        )
+            Dependency::from_str("Step C must be finished before step A can begin.").unwrap(),
+            Dependency {
+                required: TaskId('C'),
+                depending: TaskId('A'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step C must be finished before step F can begin.").unwrap(),
+            Dependency {
+                required: TaskId('C'),
+                depending: TaskId('F'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step A must be finished before step B can begin.").unwrap(),
+            Dependency {
+                required: TaskId('A'),
+                depending: TaskId('B'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step A must be finished before step D can begin.").unwrap(),
+            Dependency {
+                required: TaskId('A'),
+                depending: TaskId('D'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step B must be finished before step E can begin.").unwrap(),
+            Dependency {
+                required: TaskId('B'),
+                depending: TaskId('E'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step D must be finished before step E can begin.").unwrap(),
+            Dependency {
+                required: TaskId('D'),
+                depending: TaskId('E'),
+            }
+        );
+        assert_eq!(
+            Dependency::from_str("Step F must be finished before step E can begin.").unwrap(),
+            Dependency {
+                required: TaskId('F'),
+                depending: TaskId('E'),
+            }
+        );
     }
 
     #[test]
@@ -255,6 +255,6 @@ Step F must be finished before step E can begin."
                 depending: TaskId('E'),
             },
         ];
-        assert_eq!(order_task_dependencies(dependencies.into_iter()), "CABDFE");
+        assert_eq!(order_tasks(dependencies), "CABDFE");
     }
 }
