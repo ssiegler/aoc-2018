@@ -1,8 +1,7 @@
 extern crate aoc_2018;
 
-use std::cmp::Ordering;
-use std::collections::BinaryHeap;
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::str::FromStr;
 
 use aoc_2018::file_lines;
@@ -28,25 +27,13 @@ fn order_task_dependencies(dependencies: impl Iterator<Item = Dependency>) -> St
     order
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
-struct Task(char);
-
-impl Ord for Task {
-    fn cmp(&self, other: &Self) -> Ordering {
-        other.0.cmp(&self.0)
-    }
-}
-
-impl PartialOrd for Task {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
+struct TaskId(char);
 
 #[derive(Debug, Eq, PartialEq)]
 struct Dependency {
-    depending: Task,
-    required: Task,
+    depending: TaskId,
+    required: TaskId,
 }
 
 #[derive(Debug)]
@@ -60,8 +47,8 @@ impl FromStr for Dependency {
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         match (s.chars().nth(5), s.chars().nth(36)) {
             (Some(required), Some(depending)) => Ok(Dependency {
-                depending: Task(depending),
-                required: Task(required),
+                depending: TaskId(depending),
+                required: TaskId(required),
             }),
             _ => Err(DependencyError::FormatError),
         }
@@ -70,13 +57,44 @@ impl FromStr for Dependency {
 
 #[derive(Debug)]
 struct Dependencies {
-    depending: HashMap<Task, Vec<Task>>,
+    tasks: HashMap<TaskId, Task>,
+}
+
+#[derive(Debug)]
+struct Task {
+    depending: HashSet<TaskId>,
+    required: HashSet<TaskId>,
+}
+
+impl Task {
+    fn new() -> Self {
+        Task {
+            depending: HashSet::new(),
+            required: HashSet::new(),
+        }
+    }
+
+    fn add_depending(&mut self, depending: TaskId) {
+        self.depending.insert(depending);
+    }
+
+    fn add_required(&mut self, required: TaskId) {
+        self.required.insert(required);
+    }
+
+    fn remove_required(&mut self, required: &TaskId) {
+        self.required.remove(&required);
+    }
+
+    fn is_available(&self) -> bool {
+        self.required.is_empty()
+    }
 }
 
 impl Dependencies {
     fn new() -> Self {
         Dependencies {
-            depending: HashMap::new(),
+            tasks: HashMap::new(),
         }
     }
 
@@ -87,43 +105,39 @@ impl Dependencies {
             required,
         }: Dependency,
     ) {
-        self.depending.entry(depending).or_insert_with(|| vec![]);
-        self.depending
+        self.tasks
+            .entry(depending)
+            .or_insert_with(|| Task::new())
+            .add_required(required);
+        self.tasks
             .entry(required)
-            .or_insert_with(|| vec![])
-            .push(depending);
+            .or_insert_with(|| Task::new())
+            .add_depending(depending);
     }
 
-    fn count_required(&self) -> HashMap<Task, usize> {
-        let mut counts: HashMap<Task, usize> = HashMap::new();
-        for (&required, depending) in &self.depending {
-            counts.entry(required).or_insert(0);
-            for &task in depending {
-                *counts.entry(task).or_insert(0) += 1
-            }
-        }
-        counts
-    }
-
-    fn resolve(&self) -> String {
-        let mut result = String::new();
-        let mut required_count = self.count_required();
-        let mut queue = BinaryHeap::new();
-        required_count
-            .iter()
-            .filter(|(_task, count)| **count == 0)
-            .for_each(|(&task, _required)| queue.push(task));
-        while let Some(task) = queue.pop() {
-            result.push(task.0);
-            if let Some(depending) = self.depending.get(&task) {
-                for task in depending {
-                    let count = required_count.get_mut(&task).unwrap();
-                    *count -= 1;
-                    if *count == 0 {
-                        queue.push(*task);
-                    }
+    fn complete(&mut self, completed: &TaskId) {
+        if let Some(task) = self.tasks.remove(completed) {
+            for depending in task.depending {
+                if let Some(d) = self.tasks.get_mut(&depending) {
+                    d.remove_required(completed);
                 }
             }
+        }
+    }
+
+    fn available(&self) -> Option<TaskId> {
+        self.tasks
+            .iter()
+            .filter(|(_id, task)| task.is_available())
+            .map(|(&id, _task)| id)
+            .min()
+    }
+
+    fn resolve(&mut self) -> String {
+        let mut result = String::new();
+        while let Some(task) = self.available() {
+            result.push(task.0);
+            self.complete(&task);
         }
         result
     }
@@ -178,32 +192,32 @@ Step F must be finished before step E can begin."
             dependencies,
             vec![
                 Dependency {
-                    required: Task('C'),
-                    depending: Task('A'),
+                    required: TaskId('C'),
+                    depending: TaskId('A'),
                 },
                 Dependency {
-                    required: Task('C'),
-                    depending: Task('F'),
+                    required: TaskId('C'),
+                    depending: TaskId('F'),
                 },
                 Dependency {
-                    required: Task('A'),
-                    depending: Task('B'),
+                    required: TaskId('A'),
+                    depending: TaskId('B'),
                 },
                 Dependency {
-                    required: Task('A'),
-                    depending: Task('D'),
+                    required: TaskId('A'),
+                    depending: TaskId('D'),
                 },
                 Dependency {
-                    required: Task('B'),
-                    depending: Task('E'),
+                    required: TaskId('B'),
+                    depending: TaskId('E'),
                 },
                 Dependency {
-                    required: Task('D'),
-                    depending: Task('E'),
+                    required: TaskId('D'),
+                    depending: TaskId('E'),
                 },
                 Dependency {
-                    required: Task('F'),
-                    depending: Task('E'),
+                    required: TaskId('F'),
+                    depending: TaskId('E'),
                 },
             ]
         )
@@ -213,32 +227,32 @@ Step F must be finished before step E can begin."
     fn example_on_dependencies() {
         let dependencies = vec![
             Dependency {
-                required: Task('C'),
-                depending: Task('A'),
+                required: TaskId('C'),
+                depending: TaskId('A'),
             },
             Dependency {
-                required: Task('C'),
-                depending: Task('F'),
+                required: TaskId('C'),
+                depending: TaskId('F'),
             },
             Dependency {
-                required: Task('A'),
-                depending: Task('B'),
+                required: TaskId('A'),
+                depending: TaskId('B'),
             },
             Dependency {
-                required: Task('A'),
-                depending: Task('D'),
+                required: TaskId('A'),
+                depending: TaskId('D'),
             },
             Dependency {
-                required: Task('B'),
-                depending: Task('E'),
+                required: TaskId('B'),
+                depending: TaskId('E'),
             },
             Dependency {
-                required: Task('D'),
-                depending: Task('E'),
+                required: TaskId('D'),
+                depending: TaskId('E'),
             },
             Dependency {
-                required: Task('F'),
-                depending: Task('E'),
+                required: TaskId('F'),
+                depending: TaskId('E'),
             },
         ];
         assert_eq!(order_task_dependencies(dependencies.into_iter()), "CABDFE");
