@@ -25,8 +25,7 @@ fn order_tasks(dependencies: Vec<Dependency>) -> String {
     tasks.resolve()
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Ord, PartialOrd)]
-struct TaskId(char);
+type TaskId = char;
 
 #[derive(Debug, Eq, PartialEq)]
 struct Dependency {
@@ -45,8 +44,8 @@ impl FromStr for Dependency {
     fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
         match (s.chars().nth(5), s.chars().nth(36)) {
             (Some(required), Some(depending)) => Ok(Dependency {
-                depending: TaskId(depending),
-                required: TaskId(required),
+                depending,
+                required,
             }),
             _ => Err(DependencyError::FormatError),
         }
@@ -134,7 +133,7 @@ impl Dependencies {
     fn resolve(&mut self) -> String {
         let mut result = String::new();
         while let Some(task) = self.available() {
-            result.push(task.0);
+            result.push(task);
             self.complete(&task);
         }
         result
@@ -183,50 +182,50 @@ Step F must be finished before step E can begin."
         assert_eq!(
             Dependency::from_str("Step C must be finished before step A can begin.").unwrap(),
             Dependency {
-                required: TaskId('C'),
-                depending: TaskId('A'),
+                required: 'C',
+                depending: 'A',
             }
         );
         assert_eq!(
             Dependency::from_str("Step C must be finished before step F can begin.").unwrap(),
             Dependency {
-                required: TaskId('C'),
-                depending: TaskId('F'),
+                required: 'C',
+                depending: 'F',
             }
         );
         assert_eq!(
             Dependency::from_str("Step A must be finished before step B can begin.").unwrap(),
             Dependency {
-                required: TaskId('A'),
-                depending: TaskId('B'),
+                required: 'A',
+                depending: 'B',
             }
         );
         assert_eq!(
             Dependency::from_str("Step A must be finished before step D can begin.").unwrap(),
             Dependency {
-                required: TaskId('A'),
-                depending: TaskId('D'),
+                required: 'A',
+                depending: 'D',
             }
         );
         assert_eq!(
             Dependency::from_str("Step B must be finished before step E can begin.").unwrap(),
             Dependency {
-                required: TaskId('B'),
-                depending: TaskId('E'),
+                required: 'B',
+                depending: 'E',
             }
         );
         assert_eq!(
             Dependency::from_str("Step D must be finished before step E can begin.").unwrap(),
             Dependency {
-                required: TaskId('D'),
-                depending: TaskId('E'),
+                required: 'D',
+                depending: 'E',
             }
         );
         assert_eq!(
             Dependency::from_str("Step F must be finished before step E can begin.").unwrap(),
             Dependency {
-                required: TaskId('F'),
-                depending: TaskId('E'),
+                required: 'F',
+                depending: 'E',
             }
         );
     }
@@ -235,32 +234,32 @@ Step F must be finished before step E can begin."
     fn example_on_dependencies() {
         let dependencies = vec![
             Dependency {
-                required: TaskId('C'),
-                depending: TaskId('A'),
+                required: 'C',
+                depending: 'A',
             },
             Dependency {
-                required: TaskId('C'),
-                depending: TaskId('F'),
+                required: 'C',
+                depending: 'F',
             },
             Dependency {
-                required: TaskId('A'),
-                depending: TaskId('B'),
+                required: 'A',
+                depending: 'B',
             },
             Dependency {
-                required: TaskId('A'),
-                depending: TaskId('D'),
+                required: 'A',
+                depending: 'D',
             },
             Dependency {
-                required: TaskId('B'),
-                depending: TaskId('E'),
+                required: 'B',
+                depending: 'E',
             },
             Dependency {
-                required: TaskId('D'),
-                depending: TaskId('E'),
+                required: 'D',
+                depending: 'E',
             },
             Dependency {
-                required: TaskId('F'),
-                depending: TaskId('E'),
+                required: 'F',
+                depending: 'E',
             },
         ];
         assert_eq!(order_tasks(dependencies), "CABDFE");
