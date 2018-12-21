@@ -29,7 +29,7 @@ fn claim_cloth(claims: &Vec<Claim>) -> Cloth {
     cloth
 }
 
-fn non_overlapping<'a>(cloth: &Cloth, claims: &'a Vec<Claim>) -> &'a Claim {
+fn non_overlapping<'a>(cloth: &Cloth, claims: &'a [Claim]) -> &'a Claim {
     claims
         .iter()
         .find(|&claim| cloth.has_no_overlap(claim))
@@ -75,7 +75,7 @@ impl Cloth {
                 }
             }
         }
-        return true;
+        true
     }
 }
 

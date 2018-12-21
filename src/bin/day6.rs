@@ -6,7 +6,7 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 fn main() {
-    let sites = file_lines().map(|s| s.parse::<Point>().unwrap()).collect();
+    let sites: Vec<Point> = file_lines().map(|s| s.parse::<Point>().unwrap()).collect();
     let area = Area::from(&sites);
 
     println!(
@@ -24,11 +24,11 @@ struct Area<'a> {
     max_x: u32,
     min_y: u32,
     max_y: u32,
-    sites: &'a Vec<Point>,
+    sites: &'a [Point],
 }
 
 impl<'a> Area<'a> {
-    fn from(sites: &'a Vec<Point>) -> Self {
+    fn from(sites: &'a [Point]) -> Self {
         let mut min_x = u32::max_value();
         let mut max_x = u32::min_value();
         let mut min_y = u32::max_value();
@@ -124,7 +124,7 @@ impl Point {
         x_distance + y_distance
     }
 
-    fn find_unique_nearest_site<'a, 'b>(&'a self, sites: &'b Vec<Point>) -> Option<&'b Point> {
+    fn find_unique_nearest_site<'a, 'b>(&'a self, sites: &'b [Point]) -> Option<&'b Point> {
         let mut min = u32::max_value();
         let mut nearest = None;
         for site in sites {

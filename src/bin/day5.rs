@@ -36,11 +36,11 @@ fn can_react(a: char, b: char) -> bool {
 fn find_shortest_variant_length(polymer: &str) -> usize {
     (b'a'..=b'z')
         .map(char::from)
-        .map(|unit| reduce(remove_unit(polymer, &unit).as_str()).len())
+        .map(|unit| reduce(remove_unit(polymer, unit).as_str()).len())
         .min()
         .unwrap()
 }
 
-fn remove_unit(polymer: &str, unit: &char) -> String {
-    polymer.replace(|ch: char| ch.eq_ignore_ascii_case(unit), "")
+fn remove_unit(polymer: &str, unit: char) -> String {
+    polymer.replace(|ch: char| ch.eq_ignore_ascii_case(&unit), "")
 }

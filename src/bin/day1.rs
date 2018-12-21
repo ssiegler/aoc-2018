@@ -34,7 +34,7 @@ fn evaluate_line(line: &str) -> i32 {
 fn find_repeating_frequency() -> i32 {
     let mut past_frequencies = HashSet::new();
     let mut current_frequency = 0;
-    let mut lines = iter::repeat_with(|| file_lines()).flatten();
+    let mut lines = iter::repeat_with(file_lines).flatten();
     while !past_frequencies.contains(&current_frequency) {
         past_frequencies.insert(current_frequency);
         current_frequency += evaluate_line(&(lines.next().unwrap()));

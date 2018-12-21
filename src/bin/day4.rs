@@ -10,7 +10,7 @@ fn main() {
     let sleep_times = read_sleep_times();
 
     let (&Guard(guard), histogram) = sleep_times.iter().max_by_key(|(_k, v)| v.sum()).unwrap();
-    let minute = histogram.mode() as u32;
+    let minute = u32::from(histogram.mode());
     println!(
         "Choosing guard {} and minute {}: {}",
         guard,
@@ -21,7 +21,7 @@ fn main() {
         .iter()
         .max_by_key(|(_k, v)| v.max_freq())
         .unwrap();
-    let minute = histogram.mode() as u32;
+    let minute = u32::from(histogram.mode());
     println!(
         "Choosing guard {} and minute {}: {}",
         guard,
@@ -47,7 +47,7 @@ fn read_sleep_times() -> HashMap<Guard, Histogram> {
             Action::WakesUp => result
                 .entry(guard)
                 .or_insert_with(Histogram::new)
-                .add(&start, &entry.timestamp.minute),
+                .add(start, entry.timestamp.minute),
         }
     }
     result
@@ -63,8 +63,8 @@ impl Histogram {
         Histogram([0; 60])
     }
 
-    fn add(&mut self, start: &u8, end: &u8) {
-        for i in *start..*end {
+    fn add(&mut self, start: u8, end: u8) {
+        for i in start..end {
             self.0[i as usize] += 1;
         }
     }
