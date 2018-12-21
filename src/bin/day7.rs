@@ -1,267 +1,65 @@
-extern crate aoc_2018;
-
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::iter::FromIterator;
-use std::str::FromStr;
-
-use aoc_2018::file_lines;
 
 fn main() {
-    let dependencies = parse_dependencies(file_lines());
-    println!("Steps: {}", order_tasks(dependencies));
+
 }
 
-fn parse_dependencies<I>(input: I) -> Vec<Dependency>
-where
-    I: Iterator,
-    I::Item: AsRef<str>,
-{
-    input.map(|line| line.as_ref().parse().unwrap()).collect()
-}
-
-fn order_tasks(dependencies: Vec<Dependency>) -> String {
-    let mut tasks: Dependencies = dependencies.into_iter().collect();
-    tasks.resolve()
-}
-
-type TaskId = char;
-
-#[derive(Debug, Eq, PartialEq)]
-struct Dependency {
-    depending: TaskId,
-    required: TaskId,
-}
-
-#[derive(Debug)]
-enum DependencyError {
-    FormatError,
-}
-
-impl FromStr for Dependency {
-    type Err = DependencyError;
-
-    fn from_str(s: &str) -> Result<Self, <Self as FromStr>::Err> {
-        match (s.chars().nth(5), s.chars().nth(36)) {
-            (Some(required), Some(depending)) => Ok(Dependency {
-                depending,
-                required,
-            }),
-            _ => Err(DependencyError::FormatError),
+fn order(input: &str) -> String {
+    let mut result = String::new();
+    for line in input.lines() {
+        let mut chars = line.chars();
+        if let Some(required) = chars.nth(5) {
+            result.push(required);
+        }
+        if let Some(depending) = chars.nth(30) {
+            result.push(depending);
         }
     }
-}
-
-#[derive(Debug)]
-struct Task {
-    depending: HashSet<TaskId>,
-    required: HashSet<TaskId>,
-}
-
-impl Task {
-    fn new() -> Self {
-        Task {
-            depending: HashSet::new(),
-            required: HashSet::new(),
-        }
-    }
-
-    fn add_depending(&mut self, depending: TaskId) {
-        self.depending.insert(depending);
-    }
-
-    fn add_required(&mut self, required: TaskId) {
-        self.required.insert(required);
-    }
-
-    fn remove_required(&mut self, required: &TaskId) {
-        self.required.remove(&required);
-    }
-
-    fn is_available(&self) -> bool {
-        self.required.is_empty()
-    }
-}
-
-#[derive(Debug)]
-struct Dependencies {
-    tasks: HashMap<TaskId, Task>,
-}
-
-impl Dependencies {
-    fn new() -> Self {
-        Dependencies {
-            tasks: HashMap::new(),
-        }
-    }
-
-    fn add(
-        &mut self,
-        Dependency {
-            depending,
-            required,
-        }: Dependency,
-    ) {
-        self.tasks
-            .entry(depending)
-            .or_insert_with(|| Task::new())
-            .add_required(required);
-        self.tasks
-            .entry(required)
-            .or_insert_with(|| Task::new())
-            .add_depending(depending);
-    }
-
-    fn complete(&mut self, completed: &TaskId) {
-        if let Some(task) = self.tasks.remove(completed) {
-            for depending in task.depending {
-                if let Some(d) = self.tasks.get_mut(&depending) {
-                    d.remove_required(completed);
-                }
-            }
-        }
-    }
-
-    fn available(&self) -> Option<TaskId> {
-        self.tasks
-            .iter()
-            .filter(|(_id, task)| task.is_available())
-            .map(|(&id, _task)| id)
-            .min()
-    }
-
-    fn resolve(&mut self) -> String {
-        let mut result = String::new();
-        while let Some(task) = self.available() {
-            result.push(task);
-            self.complete(&task);
-        }
-        result
-    }
-}
-
-impl FromIterator<Dependency> for Dependencies {
-    fn from_iter<T: IntoIterator<Item = Dependency>>(iter: T) -> Self {
-        let mut dependencies = Dependencies::new();
-        for dependency in iter {
-            dependencies.add(dependency)
-        }
-        dependencies
-    }
+    result
 }
 
 #[cfg(test)]
 mod tests {
-    use aoc_2018::file_lines_from;
-
     use super::*;
 
     #[test]
-    fn example_part1() {
-        let dependencies = parse_dependencies(
-            "Step C must be finished before step A can begin.
-Step C must be finished before step F can begin.
-Step A must be finished before step B can begin.
-Step A must be finished before step D can begin.
-Step B must be finished before step E can begin.
-Step D must be finished before step E can begin.
-Step F must be finished before step E can begin."
-                .lines(),
-        );
-        assert_eq!(order_tasks(dependencies), "CABDFE");
+    fn no_tasks_without_dependencies() {
+        assert_eq!("", order(""));
     }
 
     #[test]
-    fn part1() {
-        let dependencies = parse_dependencies(file_lines_from("day7-input.txt"));
-        assert_eq!(order_tasks(dependencies), "BGJCNLQUYIFMOEZTADKSPVXRHW");
-    }
-
-    #[test]
-    fn dependency_from_str() {
+    fn single_dependency() {
         assert_eq!(
-            Dependency::from_str("Step C must be finished before step A can begin.").unwrap(),
-            Dependency {
-                required: 'C',
-                depending: 'A',
-            }
+            "AB",
+            order("Step A must be finished before step B can begin.")
         );
         assert_eq!(
-            Dependency::from_str("Step C must be finished before step F can begin.").unwrap(),
-            Dependency {
-                required: 'C',
-                depending: 'F',
-            }
+            "CD",
+            order("Step C must be finished before step D can begin.")
         );
         assert_eq!(
-            Dependency::from_str("Step A must be finished before step B can begin.").unwrap(),
-            Dependency {
-                required: 'A',
-                depending: 'B',
-            }
-        );
-        assert_eq!(
-            Dependency::from_str("Step A must be finished before step D can begin.").unwrap(),
-            Dependency {
-                required: 'A',
-                depending: 'D',
-            }
-        );
-        assert_eq!(
-            Dependency::from_str("Step B must be finished before step E can begin.").unwrap(),
-            Dependency {
-                required: 'B',
-                depending: 'E',
-            }
-        );
-        assert_eq!(
-            Dependency::from_str("Step D must be finished before step E can begin.").unwrap(),
-            Dependency {
-                required: 'D',
-                depending: 'E',
-            }
-        );
-        assert_eq!(
-            Dependency::from_str("Step F must be finished before step E can begin.").unwrap(),
-            Dependency {
-                required: 'F',
-                depending: 'E',
-            }
+            "CA",
+            order("Step C must be finished before step A can begin.")
         );
     }
 
     #[test]
-    fn example_on_dependencies() {
-        let dependencies = vec![
-            Dependency {
-                required: 'C',
-                depending: 'A',
-            },
-            Dependency {
-                required: 'C',
-                depending: 'F',
-            },
-            Dependency {
-                required: 'A',
-                depending: 'B',
-            },
-            Dependency {
-                required: 'A',
-                depending: 'D',
-            },
-            Dependency {
-                required: 'B',
-                depending: 'E',
-            },
-            Dependency {
-                required: 'D',
-                depending: 'E',
-            },
-            Dependency {
-                required: 'F',
-                depending: 'E',
-            },
-        ];
-        assert_eq!(order_tasks(dependencies), "CABDFE");
+    fn two_separate_dependencies() {
+        assert_eq!(
+            "ABCD",
+            order(
+                "Step A must be finished before step B can begin.
+Step C must be finished before step D can begin."
+            )
+        );
     }
+
+    /*
+        #[test]
+        fn three_tasks() {
+            assert_eq!("CAB", order("Step C must be finished before step B can begin.
+    Step C must be finished before step A can begin."));
+        }
+        */
 }
