@@ -10,7 +10,7 @@ pub fn file_lines() -> impl Iterator<Item = String> {
 
 pub fn file_lines_from(filename: &str) -> impl Iterator<Item = String> {
     let file = File::open(filename).expect("could not open file");
-    return BufReader::new(file)
+    BufReader::new(file)
         .lines()
-        .map(|line| line.expect("error reading file"));
+        .map(|line| line.expect("error reading file"))
 }
