@@ -9,7 +9,10 @@ fn main() {
     let cloth = claim_cloth(&claims);
 
     println!("overlap area: {}", cloth.overlap_area());
-    println!("non overlapping claim: {}", non_overlapping(&cloth, &claims).id);
+    println!(
+        "non overlapping claim: {}",
+        non_overlapping(&cloth, &claims).id
+    );
 }
 
 fn read_claims() -> Vec<Claim> {
@@ -27,7 +30,10 @@ fn claim_cloth(claims: &Vec<Claim>) -> Cloth {
 }
 
 fn non_overlapping<'a>(cloth: &Cloth, claims: &'a Vec<Claim>) -> &'a Claim {
-    claims.iter().find(|&claim| cloth.has_no_overlap(claim)).unwrap()
+    claims
+        .iter()
+        .find(|&claim| cloth.has_no_overlap(claim))
+        .unwrap()
 }
 
 #[derive(Debug)]
@@ -39,7 +45,11 @@ struct Cloth {
 
 impl Cloth {
     fn new(width: usize, height: usize) -> Self {
-        Self { width, height, coverage: vec![vec![0 as u32; width]; height] }
+        Self {
+            width,
+            height,
+            coverage: vec![vec![0 as u32; width]; height],
+        }
     }
 
     fn claim(&mut self, claim: &Claim) {
@@ -51,18 +61,21 @@ impl Cloth {
     }
 
     fn overlap_area(&self) -> usize {
-        self.coverage.iter().map(|ref v| v.iter().filter(|&&count| count > 1).count()).sum()
+        self.coverage
+            .iter()
+            .map(|ref v| v.iter().filter(|&&count| count > 1).count())
+            .sum()
     }
 
     fn has_no_overlap(&self, claim: &Claim) -> bool {
         for x in claim.left..claim.right {
             for y in claim.top..claim.bottom {
                 if self.coverage[y as usize][x as usize] != 1 {
-                    return false
+                    return false;
                 }
             }
         }
-        return true
+        return true;
     }
 }
 
@@ -82,11 +95,17 @@ impl FromStr for Claim {
         let mut parts = s.splitn(2, " @ ");
         match (parts.next(), parts.next()) {
             (Some(id), Some(coordinates)) => {
-                let mut parts = coordinates.splitn(5, |c: char| !c.is_numeric()).filter_map(|s| s.parse::<u32>().ok());
+                let mut parts = coordinates
+                    .splitn(5, |c: char| !c.is_numeric())
+                    .filter_map(|s| s.parse::<u32>().ok());
                 match (parts.next(), parts.next(), parts.next(), parts.next()) {
-                    (Some(left), Some(top), Some(width), Some(height)) => {
-                        Ok(Claim { id: id.to_string(), left, top, right: left + width, bottom: top + height })
-                    }
+                    (Some(left), Some(top), Some(width), Some(height)) => Ok(Claim {
+                        id: id.to_string(),
+                        left,
+                        top,
+                        right: left + width,
+                        bottom: top + height,
+                    }),
                     _ => Err(format!("Invalid coordinates: {}", coordinates)),
                 }
             }

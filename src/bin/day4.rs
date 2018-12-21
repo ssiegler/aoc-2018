@@ -1,20 +1,33 @@
 extern crate aoc_2018;
 extern crate core;
 
-use std::collections::HashMap;
 use aoc_2018::file_lines;
-use std::str::FromStr;
+use std::collections::HashMap;
 use std::num::ParseIntError;
+use std::str::FromStr;
 
 fn main() {
     let sleep_times = read_sleep_times();
 
     let (&Guard(guard), histogram) = sleep_times.iter().max_by_key(|(_k, v)| v.sum()).unwrap();
     let minute = histogram.mode() as u32;
-    println!("Choosing guard {} and minute {}: {}", guard, minute, guard * minute);
-    let (&Guard(guard), histogram) = sleep_times.iter().max_by_key(|(_k, v)| v.max_freq()).unwrap();
+    println!(
+        "Choosing guard {} and minute {}: {}",
+        guard,
+        minute,
+        guard * minute
+    );
+    let (&Guard(guard), histogram) = sleep_times
+        .iter()
+        .max_by_key(|(_k, v)| v.max_freq())
+        .unwrap();
     let minute = histogram.mode() as u32;
-    println!("Choosing guard {} and minute {}: {}", guard, minute, guard * minute);
+    println!(
+        "Choosing guard {} and minute {}: {}",
+        guard,
+        minute,
+        guard * minute
+    );
 }
 
 fn read_sleep_times() -> HashMap<Guard, Histogram> {
@@ -27,9 +40,14 @@ fn read_sleep_times() -> HashMap<Guard, Histogram> {
     let mut start: u8 = 0;
     for entry in entries {
         match entry.action {
-            Action::BeginsShift(next_guard) => { guard = next_guard; }
-            Action::FallsAsleep => { start = entry.timestamp.minute }
-            Action::WakesUp => { result.entry(guard).or_insert_with(Histogram::new).add(&start, &entry.timestamp.minute) }
+            Action::BeginsShift(next_guard) => {
+                guard = next_guard;
+            }
+            Action::FallsAsleep => start = entry.timestamp.minute,
+            Action::WakesUp => result
+                .entry(guard)
+                .or_insert_with(Histogram::new)
+                .add(&start, &entry.timestamp.minute),
         }
     }
     result
@@ -60,7 +78,12 @@ impl Histogram {
     }
 
     fn mode(&self) -> u8 {
-        self.0.iter().enumerate().max_by_key(|(_minute, &count)| count).map(|(minute, _)| minute as u8).unwrap()
+        self.0
+            .iter()
+            .enumerate()
+            .max_by_key(|(_minute, &count)| count)
+            .map(|(minute, _)| minute as u8)
+            .unwrap()
     }
 }
 
@@ -100,7 +123,7 @@ impl FromStr for Action {
         Ok(match s {
             "falls asleep" => Action::FallsAsleep,
             "wakes up" => Action::WakesUp,
-            _ => Action::BeginsShift(Guard(s[7..].splitn(2, ' ').next().unwrap().parse()?))
+            _ => Action::BeginsShift(Guard(s[7..].splitn(2, ' ').next().unwrap().parse()?)),
         })
     }
 }

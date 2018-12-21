@@ -2,10 +2,10 @@ extern crate aoc_2018;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::iter::FromIterator;
 use std::str::FromStr;
 
 use aoc_2018::file_lines;
-use std::iter::FromIterator;
 
 fn main() {
     let dependencies = parse_dependencies(file_lines());
@@ -141,7 +141,7 @@ impl Dependencies {
 }
 
 impl FromIterator<Dependency> for Dependencies {
-    fn from_iter<T: IntoIterator<Item=Dependency>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = Dependency>>(iter: T) -> Self {
         let mut dependencies = Dependencies::new();
         for dependency in iter {
             dependencies.add(dependency)

@@ -5,7 +5,10 @@ use aoc_2018::file_lines;
 fn main() {
     let polymer: String = file_lines().collect();
     println!("Remaining units: {}", reduce(polymer.as_str()).len());
-    println!("Shortest polymer length: {}", find_shortest_variant_length(polymer.as_str()));
+    println!(
+        "Shortest polymer length: {}",
+        find_shortest_variant_length(polymer.as_str())
+    );
 }
 
 fn reduce(polymer: &str) -> String {
@@ -31,9 +34,11 @@ fn can_react(a: char, b: char) -> bool {
 }
 
 fn find_shortest_variant_length(polymer: &str) -> usize {
-    (b'a'..=b'z').map(char::from)
+    (b'a'..=b'z')
+        .map(char::from)
         .map(|unit| reduce(remove_unit(polymer, &unit).as_str()).len())
-        .min().unwrap()
+        .min()
+        .unwrap()
 }
 
 fn remove_unit(polymer: &str, unit: &char) -> String {

@@ -1,7 +1,7 @@
 extern crate aoc_2018;
 
-use std::collections::HashMap;
 use aoc_2018::file_lines;
+use std::collections::HashMap;
 
 pub fn main() {
     println!("Checksum: {}", checksum());
@@ -39,18 +39,20 @@ fn find_common_letters() -> String {
                 return same_chars(el1, el2);
             }
         }
-    };
+    }
     String::new()
 }
 
 fn different_chars_count(str1: &str, str2: &str) -> usize {
-    str1.chars().zip(str2.chars())
+    str1.chars()
+        .zip(str2.chars())
         .filter(|(ch1, ch2)| ch1 != ch2)
         .count()
 }
 
 fn same_chars(str1: &str, str2: &str) -> String {
-    str1.chars().zip(str2.chars())
+    str1.chars()
+        .zip(str2.chars())
         .filter_map(|(ch1, ch2)| if ch1 == ch2 { Some(ch1) } else { None })
         .collect()
 }

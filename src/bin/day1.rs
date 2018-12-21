@@ -7,7 +7,10 @@ use aoc_2018::file_lines;
 
 pub fn main() {
     println!("Frequency after one round: {}", sum_changes());
-    println!("First frequency reached twice: {}", find_repeating_frequency());
+    println!(
+        "First frequency reached twice: {}",
+        find_repeating_frequency()
+    );
 }
 
 fn sum_changes() -> i32 {
