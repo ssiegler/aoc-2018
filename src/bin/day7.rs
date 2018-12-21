@@ -6,6 +6,11 @@ fn main() {
     println!("Order: {}", order(file_lines()))
 }
 
+fn parse_line(line: &str) -> Option<(char, char)> {
+    let mut chars = line.chars();
+    Some((chars.nth(5)?, chars.nth(30)?))
+}
+
 fn order<I>(input: I) -> String
 where
     I: Iterator,
@@ -13,11 +18,8 @@ where
 {
     let mut result = String::new();
     for line in input {
-        let mut chars = line.as_ref().chars();
-        if let Some(required) = chars.nth(5) {
+        if let Some((required, depending)) = parse_line(line.as_ref()) {
             result.push(required);
-        }
-        if let Some(depending) = chars.nth(30) {
             result.push(depending);
         }
     }
