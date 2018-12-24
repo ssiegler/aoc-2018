@@ -28,13 +28,19 @@ impl Node {
         if self.children.is_empty() {
             self.data.iter().sum()
         } else {
-            self.data.iter().filter_map(|&i| self.children.get(i-1).map(Node::value)).sum()
+            self.data
+                .iter()
+                .filter_map(|&i| self.children.get(i - 1).map(Node::value))
+                .sum()
         }
     }
 }
 
-fn read_node(iter: &mut impl Iterator<Item=usize>) -> Node {
-    let mut result = Node { children: Vec::new(), data: Vec::new() };
+fn read_node(iter: &mut impl Iterator<Item = usize>) -> Node {
+    let mut result = Node {
+        children: Vec::new(),
+        data: Vec::new(),
+    };
     let child_count = iter.next().unwrap();
     let meta_count = iter.next().unwrap();
     for _ in 0..child_count {
