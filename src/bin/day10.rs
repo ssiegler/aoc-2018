@@ -15,13 +15,13 @@ fn main() {
 
     let mut area = usize::max_value();
     let mut count = 0;
-    while grid.area() < area  {
+    while grid.area() < area {
         area = grid.area();
         grid.step();
         count += 1;
     }
     grid.back();
-    println!("{}\n{}", count-1, grid.print());
+    println!("{}\n{}", count - 1, grid.print());
 }
 
 struct Grid<'a> {
