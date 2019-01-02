@@ -3,9 +3,12 @@ use std::fs::File;
 use std::io::BufRead;
 use std::io::BufReader;
 
+pub fn filename() -> String {
+    env::args().nth(1).expect("missing filename argument")
+}
+
 pub fn file_lines() -> impl Iterator<Item = String> {
-    let filename = env::args().nth(1).expect("missing filename argument");
-    file_lines_from(filename.as_str())
+    file_lines_from(filename().as_str())
 }
 
 pub fn file_lines_from(filename: &str) -> impl Iterator<Item = String> {
